@@ -1,7 +1,18 @@
 [project]
 name = "nikkei-daily-insight"
 version = "0.1.0"
-description = "Add your description here"
+description = "日経新聞音声議事録からGemini APIでハルシネーションのないレポートを自動生成するCLIツール"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "google-generativeai>=0.8.0",
+    "python-dotenv>=1.0.0",
+    "markdown>=3.6",
+    "weasyprint>=62.0",
+]
+
+[project.scripts]
+nikkei-insight = "main:main"
+
+[tool.uv]
+dev-dependencies = []

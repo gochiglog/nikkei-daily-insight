@@ -10,7 +10,7 @@ Gemini の Web チャットでは文脈肥大化によるハルシネーショ�
 | 用途 | ライブラリ / サービス |
 |---|---|
 | パッケージ管理 | uv |
-| LLM API | Google Gemini API (`google-generativeai`) |
+| LLM API | Google Gemini API (`google-genai`) |
 | 環境変数 | python-dotenv |
 | Markdown → HTML | markdown |
 | HTML → PDF | weasyprint |

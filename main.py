@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import date
 
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 import os
 import markdown as md_lib
 
@@ -30,18 +30,26 @@ def load_transcript(input_path: Path) -> str:
     return input_path.read_text(encoding="utf-8")
 
 
-def call_gemini(system_prompt: str, transcript: str, model_name: str) -> str:
+def call_gemini_streaming(system_prompt: str, transcript: str, model_name: str) -> str:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("環境変数 GEMINI_API_KEY が設定されていません。")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name=model_name)
+    client = genai.Client(api_key=api_key)
 
     # ステートレスな1ショット呼び出し: system_prompt + transcript を結合して送信
     full_prompt = f"{system_prompt}\n\n{transcript}"
-    response = model.generate_content(full_prompt)
-    return response.text
+
+    print("\n" + "=" * 60)
+    chunks: list[str] = []
+    # ストリーミングで受信しながらリアルタイム表示
+    for chunk in client.models.generate_content_stream(model=model_name, contents=full_prompt):
+        text = chunk.text
+        print(text, end="", flush=True)
+        chunks.append(text)
+    print("\n" + "=" * 60 + "\n")
+
+    return "".join(chunks)
 
 
 def save_markdown(content: str, output_dir: Path, stem: str) -> Path:
@@ -90,8 +98,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="gemini-1.5-pro",
-        help="使用する Gemini モデル名 (デフォルト: gemini-1.5-pro)",
+        default="gemini-2.5-flash",
+        help="使用する Gemini モデル名 (デフォルト: gemini-2.5-flash)",
     )
     parser.add_argument(
         "--no-pdf",
@@ -105,13 +113,21 @@ def main() -> None:
     print(f"[1/3] 議事録を読み込み中: {input_path}")
     transcript = load_transcript(input_path)
 
-    print("[2/3] Gemini API にリクエスト送信中...")
+    print(f"[2/3] Gemini API にリクエスト送信中... (model: {args.model})")
     system_prompt = load_system_prompt()
-    report = call_gemini(system_prompt, transcript, args.model)
-
-    print("\n" + "=" * 60)
-    print(report)
-    print("=" * 60 + "\n")
+    try:
+        report = call_gemini_streaming(system_prompt, transcript, args.model)
+    except Exception as e:
+        msg = str(e)
+        if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
+            print("\n[エラー] APIのクォータ上限に達しています。", file=sys.stderr)
+            print("  → Google AI Studio でプロジェクトの課金を有効化してください。", file=sys.stderr)
+            print("    https://ai.google.dev/gemini-api/docs/rate-limits", file=sys.stderr)
+        elif "GEMINI_API_KEY" in msg:
+            print("\n[エラー] APIキーが設定されていません。.env ファイルを確認してください。", file=sys.stderr)
+        else:
+            print(f"\n[エラー] {e}", file=sys.stderr)
+        sys.exit(1)
 
     print("[3/3] レポートを保存中...")
     stem = input_path.stem

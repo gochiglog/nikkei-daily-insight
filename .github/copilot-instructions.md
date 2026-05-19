@@ -1,4 +1,4 @@
-# Copilot 全体共通指示
+#  全体共通指示
 
 ## 言語・出力形式
 
@@ -19,13 +19,34 @@
 - シークレット・認証情報をソースコードにコミットしない
 - 一時ファイル・ビルド成果物（`__pycache__`、`.pyc`、`dist/` など）をコミットしない
 - 人間向けテンプレート（`PULL_REQUEST_TEMPLATE.md` 等）を Copilot 指示ファイルに含めない
-- `print` でのログ出力は行わず、`logging` モジュールを使用する
 
 ## 命名規則
 
 - 変数・関数・クラス名は処理内容が想像できる**具体的な英単語**を使う
 - インデックス番号に意味を持たせない（`i` より `time_idx` など意味ある名前を使う）
-- テーブル・カラム名はプロジェクト内で統一する
+
+## コミットメッセージ規約（必須）
+
+コミットメッセージは**必ず以下の書式・日本語**で生成すること。英語は禁止。
+
+```
+[#<Issue番号>] <label>: <変更内容の体言止め>
+```
+
+labelの種類:
+- `feat` 新機能追加
+- `fix` バグ修正
+- `docs` ドキュメントのみ
+- `refactor` 動作変更を伴わないリファクタリング
+- `chore` ビルド設定・依存関係など
+
+例:
+```
+[#1] feat: Gemini API連携CLIツールの初期実装
+[#2] fix: デフォルトモデルをgemini-2.5-flashに変更しストリーミング出力を追加
+```
+
+Issue番号が不明な場合は `[#?]` とする。内容は50文字以内の日本語体言止めで書く。
 
 ## 参照先
 
@@ -34,6 +55,4 @@
 - Issue 作成: `.github/instructions/issue.instructions.md`
 - PR 作成: `.github/instructions/pr.instructions.md`
 - コードレビュー: `.github/instructions/review.instructions.md`
-- コーディング規約: `.github/instructions/coding.instructions.md`
 - コミットメッセージ: `.github/instructions/commit.instructions.md`
-- Coding Agent 運用: `AGENTS.md`
